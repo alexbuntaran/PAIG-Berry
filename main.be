@@ -145,6 +145,7 @@ end
 
 # ----------------------------------------- INTERPRETER ----------------------------------------- #
 
+# Takes in args and op and computes args with op
 def interp_binop(args, op)
     if args.size() != 2
         raise "interp_binop - PAIG: invalid number of args", args.size()
@@ -167,6 +168,7 @@ def interp_binop(args, op)
     end
 end
 
+# Takes in args and returns if they are equal
 def interp_equal(args)
     if args.size() != 2
         raise "interp_equal - PAIG: invalid number of args", args.size()
@@ -174,7 +176,7 @@ def interp_equal(args)
 
     if classname(args[0]) == "NumV" && classname(args[1]) == "NumV"
         return BoolV(args[0].num == args[1].num)
-    elif classname(args[0]) == "StrV" && classname(args[1]) == "Strv"
+    elif classname(args[0]) == "StrV" && classname(args[1]) == "StrV"
         return BoolV(args[0].str == args[1].str)
     elif classname(args[0]) == "BoolV" && classname(args[1]) == "BoolV"
         return BoolV(args[0].bool == args[1].bool)
@@ -183,6 +185,7 @@ def interp_equal(args)
     end
 end
 
+# Takes in args and throws a user error
 def interp_error(args)
     if args.size() != 1
         raise "interp_error - PAIG: invalid number of args", args.size()
@@ -243,7 +246,7 @@ def interp(expr, env)
                 for i : 0 .. bindings.size() - 1
                     extended_env.push(bindings[i])
                 end
-                
+
                 return interp(func.body, extended_env)
             end
         else
@@ -272,29 +275,31 @@ end
 
 # ------------------------------------------ TEST CASES ----------------------------------------- #
 
-# serialize(interp( ), env))
-# top_interp( NumC(3))
-# top_interp( StrC("berry kekw"))
-# top_interp(IdC("true"))
-# top_interp(IdC("false"))
-# top_interp(BlamC(["x", "y"], AppC( IdC("+"), [NumC(1), NumC(1)])))
-# top_interp(AppC( IdC("+"), [NumC(1), NumC(12)]))
-# top_interp(AppC( IdC("-"), [NumC(15), NumC(30)]))
-# top_interp(AppC( IdC("*"), [NumC(8), NumC(-2)]))
-# top_interp(AppC( IdC("/"), [NumC(1000), NumC(5)]))
+top_interp(NumC(3))
+top_interp(StrC("berry kekw"))
+top_interp(IdC("true"))
+top_interp(IdC("false"))
+top_interp(BlamC(["x", "y"], AppC( IdC("+"), [NumC(1), NumC(1)])))
+top_interp(AppC(IdC("+"), [NumC(1), NumC(12)]))
+top_interp(AppC(IdC("-"), [NumC(15), NumC(30)]))
+top_interp(AppC(IdC("*"), [NumC(8), NumC(-2)]))
+top_interp(AppC(IdC("/"), [NumC(1000), NumC(5)]))
+top_interp(AppC(IdC("equal?"), [NumC(1000), NumC(5)]))
+top_interp(AppC(IdC("equal?"), [NumC(5), NumC(5)])) 
+top_interp(AppC(IdC("equal?"), [StrC("asdf"), NumC(5)])) 
+top_interp(AppC(IdC("equal?"), [StrC("asdf"), StrC("asdf")]))
+top_interp(AppC(IdC("equal?"), [IdC("true"), IdC("true")]))
+top_interp(NumC(10))
+top_interp(StrC("hi"))
+top_interp(IdC("true"))
+top_interp(IdC("false"))
+top_interp(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])))
+top_interp(IdC("+"))
+top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)]))
+top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)])])), [NumC(1)]))
+top_interp(AppC(IdC("+"), [NumC(10), NumC(20)]))
 # try 
 #     top_interp(AppC( IdC("/"), [NumC(1000), NumC(0)]))
 # except
-#     "interp PAIG: Divide by 0" as x 
+#     "interp - PAIG: divide by 0" as x 
 # end
-# top_interp(AppC( IdC("equal?"), [NumC(1000), NumC(5)]))
-# top_interp(AppC( IdC("equal?"), [NumC(5), NumC(5)])) 
-# top_interp(AppC( IdC("equal?"), [StrC("asdf"), NumC(5)])) 
-# top_interp(AppC( IdC("equal?"), [StrC("asdf"), StrC("asdf")]))
-
-top_interp(NumC(10))
-top_interp(IdC("true"))
-top_interp(IdC("false"))
-top_interp(IdC("+"))
-top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)]))
-top_interp(AppC(IdC("+"), [NumC(10), NumC(20)]))
