@@ -160,6 +160,9 @@ def interp_binop(args, op)
     elif op == "*"
         return NumV(args[0].num * args[1].num)
     elif op == "/"
+        if args[1].num == 0
+            raise 'interp_binop - PAIG: Divide by 0', args
+        end 
         return NumV(args[0].num / args[1].num)
     elif op == "<="
         return BoolV(args[0].num <= args[1].num)
@@ -253,13 +256,14 @@ def interp(expr, env)
             raise "interp - PAIG: function does not exist", case
         end
     elif case == "IfC"
-        cond = interp(expr.cond. env)
-        if cond == BoolV(true)
+        cond = interp(expr.cond, env)
+        if classname(cond) != 'BoolV'
+            raise "interp - PAIG: conditional not a bool", expr
+        end
+        if cond.bool == true
             return interp(expr.tru, env)
-        elif cond == BoolV(false)
-            return interp(expr.fal, env)
         else
-            raise "interp - PAIG: conditional not a bool", expr.cond
+            return interp(expr.fal, env)
         end
     else
         raise "interp - PAIG: invalid ExprC", case
@@ -275,31 +279,48 @@ end
 
 # ------------------------------------------ TEST CASES ----------------------------------------- #
 
-top_interp(NumC(3))
-top_interp(StrC("berry kekw"))
-top_interp(IdC("true"))
-top_interp(IdC("false"))
-top_interp(BlamC(["x", "y"], AppC( IdC("+"), [NumC(1), NumC(1)])))
-top_interp(AppC(IdC("+"), [NumC(1), NumC(12)]))
-top_interp(AppC(IdC("-"), [NumC(15), NumC(30)]))
-top_interp(AppC(IdC("*"), [NumC(8), NumC(-2)]))
-top_interp(AppC(IdC("/"), [NumC(1000), NumC(5)]))
-top_interp(AppC(IdC("equal?"), [NumC(1000), NumC(5)]))
-top_interp(AppC(IdC("equal?"), [NumC(5), NumC(5)])) 
-top_interp(AppC(IdC("equal?"), [StrC("asdf"), NumC(5)])) 
-top_interp(AppC(IdC("equal?"), [StrC("asdf"), StrC("asdf")]))
-top_interp(AppC(IdC("equal?"), [IdC("true"), IdC("true")]))
-top_interp(NumC(10))
-top_interp(StrC("hi"))
-top_interp(IdC("true"))
-top_interp(IdC("false"))
-top_interp(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])))
-top_interp(IdC("+"))
-top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)]))
-top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)])])), [NumC(1)]))
-top_interp(AppC(IdC("+"), [NumC(10), NumC(20)]))
-# try 
-#     top_interp(AppC( IdC("/"), [NumC(1000), NumC(0)]))
-# except
-#     "interp - PAIG: divide by 0" as x 
-# end
+
+# top_interp(NumC(3))  
+# top_interp(StrC("berry")) 
+# top_interp(IdC("true")) 
+# top_interp(IdC("false"))
+# top_interp(BlamC(["x", "y"], AppC( IdC("+"), [NumC(1), NumC(1)])))
+# top_interp(AppC(IdC("+"), [NumC(1), NumC(12)]))
+# top_interp(AppC(IdC("-"), [NumC(15), NumC(30)]))
+# top_interp(AppC(IdC("*"), [NumC(8), NumC(-2)]))
+# top_interp(AppC(IdC("/"), [NumC(1000), NumC(5)]))
+# top_interp(AppC(IdC("equal?"), [NumC(1000), NumC(5)]))
+# top_interp(AppC(IdC("equal?"), [NumC(5), NumC(5)])) 
+# top_interp(AppC(IdC("equal?"), [StrC("asdf"), NumC(5)])) 
+# top_interp(AppC(IdC("equal?"), [StrC("asdf"), StrC("asdf")]))
+# top_interp(AppC(IdC("equal?"), [IdC("true"), IdC("true")]))
+# top_interp(NumC(10))
+# top_interp(StrC("hi"))
+# top_interp(IdC("true"))
+# top_interp(IdC("false"))
+# top_interp(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])))
+# top_interp(IdC("+"))
+# top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)]))
+top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)])])), [NumC(1)])) #3
+#top_interp(AppC(IdC("+"), [NumC(10), NumC(20)]))
+#top_interp(AppC (IdC('<='), [NumC(5), NumC(3)]))
+#top_interp( IfC(  IdC("true"), NumC(10),  IdC('false')) )
+top_interp( IfC( AppC (IdC('<='), [NumC(5), NumC(3)]), StrC("smaller"),  StrC("bigger")) ) #bigger
+
+try 
+    top_interp(AppC( IdC("/"), [NumC(1000), NumC(0)]))
+except
+    "interp_binop - PAIG: Divide by 0" 
+end
+
+try 
+    top_interp( IfC( NumC(3), IdC('true'),  IdC('false')) )
+except
+    "interp - PAIG: conditional not a bool" 
+end
+
+try 
+    top_interp( IdC( 'x') )
+except
+    "env_lookup - PAIG: symbol not found" 
+end
