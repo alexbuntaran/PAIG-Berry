@@ -161,7 +161,7 @@ def interp_binop(args, op)
         return NumV(args[0].num * args[1].num)
     elif op == "/"
         if args[1].num == 0
-            raise 'interp_binop - PAIG: Divide by 0', args
+            raise "interp_binop - PAIG: Divide by 0", args
         end 
         return NumV(args[0].num / args[1].num)
     elif op == "<="
@@ -257,7 +257,7 @@ def interp(expr, env)
         end
     elif case == "IfC"
         cond = interp(expr.cond, env)
-        if classname(cond) != 'BoolV'
+        if classname(cond) != "BoolV"
             raise "interp - PAIG: conditional not a bool", expr
         end
         if cond.bool == true
@@ -279,6 +279,32 @@ end
 
 # ------------------------------------------ TEST CASES ----------------------------------------- #
 
+# {{blam {x} {+ x {{blam {x} {+ x 1}} 1}}} 5} --> "7"
+top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)])])), [NumC(5)]))
+
+# {{<= 5 3} ? "smaller" else: "bigger"} --> "smaller"
+top_interp(IfC( AppC (IdC("<="), [NumC(5), NumC(3)]), StrC("smaller"),  StrC("bigger")))
+
+# {/ 1000 0}
+try 
+    top_interp(AppC(IdC("/"), [NumC(1000), NumC(0)]))
+except
+    "interp_binop - PAIG: Divide by 0" 
+end
+
+# {3 ? "true" else: "false"}
+try 
+    top_interp(IfC(NumC(3), IdC("true"), IdC("false")))
+except
+    "interp - PAIG: conditional not a bool" 
+end
+
+# x
+try 
+    top_interp(IdC("x"))
+except
+    "env_lookup - PAIG: symbol not found" 
+end
 
 # top_interp(NumC(3))  
 # top_interp(StrC("berry")) 
@@ -301,26 +327,6 @@ end
 # top_interp(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])))
 # top_interp(IdC("+"))
 # top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)]))
-top_interp(AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), AppC(BlamC(["x"], AppC(IdC("+"), [IdC("x"), NumC(1)])), [NumC(1)])])), [NumC(1)])) #3
-#top_interp(AppC(IdC("+"), [NumC(10), NumC(20)]))
-#top_interp(AppC (IdC('<='), [NumC(5), NumC(3)]))
-#top_interp( IfC(  IdC("true"), NumC(10),  IdC('false')) )
-top_interp( IfC( AppC (IdC('<='), [NumC(5), NumC(3)]), StrC("smaller"),  StrC("bigger")) ) #bigger
-
-try 
-    top_interp(AppC( IdC("/"), [NumC(1000), NumC(0)]))
-except
-    "interp_binop - PAIG: Divide by 0" 
-end
-
-try 
-    top_interp( IfC( NumC(3), IdC('true'),  IdC('false')) )
-except
-    "interp - PAIG: conditional not a bool" 
-end
-
-try 
-    top_interp( IdC( 'x') )
-except
-    "env_lookup - PAIG: symbol not found" 
-end
+# top_interp(AppC(IdC("+"), [NumC(10), NumC(20)]))
+# top_interp(AppC(IdC("<="), [NumC(5), NumC(3)]))
+# top_interp(IfC(IdC("true"), NumC(10), IdC("false")))
